@@ -1,0 +1,79 @@
+name: Build and Release CUDA Package
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - 'v*'  # Trigger on version tags
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    # Set up Python environment
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.8'
+    
+    # Install CUDA
+    - name: Install CUDA
+      uses: Jimver/cuda-toolkit@v0.2.11
+      with:
+        cuda: '12.1.0'
+        method: 'network'
+        sub-packages: '["nvcc", "cudart", "cublas", "cufft", "curand", "cusolver", "cusparse", "thrust"]'
+    
+    # Install system dependencies
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y freeglut3-dev libgl1-mesa-dev libglu1-mesa-dev
+    
+    # Install MAGMA
+    - name: Install MAGMA
+      run: |
+        sudo apt-get install -y gfortran
+        wget http://icl.utk.edu/projectsfiles/magma/downloads/magma-2.7.1.tar.gz
+        tar -xvf magma-2.7.1.tar.gz
+        cd magma-2.7.1
+        cp make.inc-examples/make.inc.openblas make.inc
+        sed -i 's|^OPENBLASDIR.*|OPENBLASDIR = /usr|g' make.inc
+        sed -i 's|^CUDADIR.*|CUDADIR = /usr/local/cuda|g' make.inc
+        make -j$(nproc)
+        sudo make install prefix=/usr/local/magma
+    
+    # Install Python dependencies
+    - name: Install Python dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
+        pip install wheel setuptools build
+    
+    # Build the CUDA package
+    - name: Build CUDA package
+      run: |
+        cd cuda
+        python setup.py bdist_wheel
+    
+    # Create GitHub Release if this is a tag
+    - name: Create Release
+      if: startsWith(github.ref, 'refs/tags/')
+      uses: softprops/action-gh-release@v1
+      with:
+        files: cuda/dist/*.whl
+        generate_release_notes: true
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    
+    # Upload wheel as artifact for branch pushes
+    - name: Upload wheel artifact
+      if: ${{ !startsWith(github.ref, 'refs/tags/') }}
+      uses: actions/upload-artifact@v4
+      with:
+        name: kilonerf-cuda-wheel
+        path: cuda/dist/*.whl
