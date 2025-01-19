@@ -19,11 +19,11 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v5
       with:
-        python-version: '3.8'
+        python-version: '3.11'
     
     # Install CUDA
     - name: Install CUDA
-      uses: Jimver/cuda-toolkit@dc0ca7bb29c5a92f7a963d3d5c93f8d59765136a # v0.2.14
+      uses: Jimver/cuda-toolkit@4bd727d5619dc6fa323b1e76c3aa5dca94f5ec6d # v0.2.19
       
     # Install system dependencies
     - name: Install system dependencies
