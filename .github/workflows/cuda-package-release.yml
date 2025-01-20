@@ -10,7 +10,7 @@ on:
 
 jobs:
   build-and-release:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     
     steps:
     - uses: actions/checkout@v4
@@ -23,7 +23,7 @@ jobs:
     
     # Install CUDA
     - name: Install CUDA
-      uses: Jimver/cuda-toolkit@4bd727d5619dc6fa323b1e76c3aa5dca94f5ec6d # v0.2.19
+      uses: Jimver/cuda-toolkit@9b295696791d75d658d8de64c4a85097ad8abeaf # v0.2.16
       
     # Install system dependencies
     - name: Install system dependencies
