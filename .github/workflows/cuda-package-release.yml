@@ -10,10 +10,16 @@ on:
 
 jobs:
   build-and-release:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     
     steps:
     - uses: actions/checkout@v4
+
+    - name: Set up GCC
+      uses: egor-tensin/setup-gcc@v1
+      with:
+        version: 9
+        platform: x64
     
     # Set up Python environment
     - name: Set up Python
@@ -23,7 +29,7 @@ jobs:
     
     # Install CUDA
     - name: Install CUDA
-      uses: Jimver/cuda-toolkit@9b295696791d75d658d8de64c4a85097ad8abeaf # v0.2.16
+      uses: Jimver/cuda-toolkit@4bd727d5619dc6fa323b1e76c3aa5dca94f5ec6d # v0.2.19
       
     # Install system dependencies
     - name: Install system dependencies
