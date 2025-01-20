@@ -2,9 +2,9 @@ from setuptools import setup
 from torch.utils.cpp_extension import BuildExtension, CUDAExtension
 import os
 
-use_local_cub = True
+use_local_cub = False
 
-include_dirs = ['/usr/local/magma/include']
+include_dirs = ['/usr/local/magma/include', '/usr/local/cuda-12.6/include']
 if use_local_cub:
     dir_path = os.path.dirname(os.path.realpath(__file__))
 
@@ -14,6 +14,7 @@ extension = CUDAExtension('kilonerf_cuda',
      'render_to_screen.cpp'],
     include_dirs = include_dirs,
     libraries = ['GL', 'GLU', 'glut'],
+    library_dirs=['/usr/local/cuda-12.6/lib64'],
     extra_objects = ['/usr/local/magma/lib/libmagma.a'],
     extra_compile_args = {'cxx': [], 'nvcc': ['-Xptxas', '-v,-warn-lmem-usage']}
     )
