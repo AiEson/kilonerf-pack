@@ -36,8 +36,10 @@ jobs:
         python-version: ${{ matrix.python-version }}
     
     # Install CUDA
-    - name: Install CUDA ${{ strategy.job-index }}
+    - name: Install CUDA
       uses: Jimver/cuda-toolkit@4bd727d5619dc6fa323b1e76c3aa5dca94f5ec6d # v0.2.19
+      with:
+        name: ${{ matrix.python-version }}-cuda-install
       
     # Install system dependencies
     - name: Install system dependencies
@@ -46,7 +48,7 @@ jobs:
         sudo apt-get install -y freeglut3-dev libgl1-mesa-dev libglu1-mesa-dev wget curl cmake libopenblas-dev
     
     # Install MAGMA
-    - name: Install MAGMA ${{ strategy.job-index }}
+    - name: Install MAGMA
       run: |
         sudo apt-get install -y gfortran curl
         # curl -L -o magma-2.8.0.tar.gz http://icl.utk.edu/projectsfiles/magma/downloads/magma-2.8.0.tar.gz
@@ -62,14 +64,14 @@ jobs:
         sudo -E make install prefix=/usr/local/magma
     
     # Install Python dependencies
-    - name: Install Python dependencies ${{ strategy.job-index }}
+    - name: Install Python dependencies
       run: |
         python -m pip install --upgrade pip
         pip install torch torchvision torchaudio
         pip install wheel setuptools build
     
     # Build the CUDA package
-    - name: Build CUDA package ${{ strategy.job-index }}
+    - name: Build CUDA package
       run: |
         cd cuda
         TORCH_CUDA_ARCH_LIST="6.0 7.0 7.5 8.0 8.6+PTX" python setup.py bdist_wheel
@@ -85,7 +87,7 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     
     # Upload wheel as artifact for branch pushes
-    - name: Upload wheel artifact ${{ strategy.job-index }}
+    - name: Upload wheel artifact
       if: ${{ !startsWith(github.ref, 'refs/tags/') }}
       uses: actions/upload-artifact@v4
       with:
