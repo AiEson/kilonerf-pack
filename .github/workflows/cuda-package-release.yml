@@ -39,7 +39,7 @@ jobs:
     - name: Install CUDA
       uses: Jimver/cuda-toolkit@4bd727d5619dc6fa323b1e76c3aa5dca94f5ec6d # v0.2.19
       with:
-        log-file-suffix: ${{ matrix.python-version }}.txt"
+        log-file-suffix: ${{ matrix.python-version }}.txt
       
     # Install system dependencies
     - name: Install system dependencies
