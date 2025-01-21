@@ -58,7 +58,7 @@ jobs:
         export CUDADIR=/usr/local/cuda
         export OPENBLASDIR="/usr"
         # export TORCH_CUDA_ARCH_LIST="6.0 7.0 7.5 8.0 8.6+PTX"
-        make -j8
+        make -j$(nproc)
         sudo -E make install prefix=/usr/local/magma
     
     # Install Python dependencies
@@ -72,7 +72,7 @@ jobs:
     - name: Build CUDA package
       run: |
         cd cuda
-        TORCH_CUDA_ARCH_LIST="6.0 7.0 7.5 8.0 8.6+PTX" MAX_JOBS=$(nproc) python setup.py bdist_wheel
+        TORCH_CUDA_ARCH_LIST="6.0 7.0 7.5 8.0 8.6+PTX" python setup.py bdist_wheel
     
     # Create GitHub Release if this is a tag
     - name: Create Release
