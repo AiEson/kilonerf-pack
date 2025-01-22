@@ -9,7 +9,7 @@ on:
       - 'v*'  # Trigger on version tags
 
 jobs:
-  build-and-release:
+  build:
     strategy:
       matrix:
         python-version: ['3.9', '3.10', '3.11', '3.12']
@@ -76,30 +76,27 @@ jobs:
         cd cuda
         TORCH_CUDA_ARCH_LIST="6.0 7.0 7.5 8.0 8.6+PTX" python setup.py bdist_wheel
     
-    # Create GitHub Release if this is a tag
-    - name: Download all artifacts
-      if: startsWith(github.ref, 'refs/tags/')
-      uses: actions/download-artifact@v4
-      with:
-        path: dist
-        pattern: kilonerf-cuda-wheel-*
-        merge-multiple: true
-    
-    - name: Create Release
-      if: startsWith(github.ref, 'refs/tags/')
-      uses: softprops/action-gh-release@v1
-      with:
-        files: |
-          cuda/dist/*.whl
-          dist/*.whl
-        generate_release_notes: true
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-    
-    # Upload wheel as artifact for branch pushes
+    # Upload wheel as artifact
     - name: Upload wheel artifact
-      if: ${{ !startsWith(github.ref, 'refs/tags/') }}
       uses: actions/upload-artifact@v4
       with:
         name: kilonerf-cuda-wheel-${{ matrix.python-version }}
         path: cuda/dist/*.whl
+
+  release:
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: dist
+          pattern: kilonerf-cuda-wheel-*
+          merge-multiple: true
+      
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: dist/**/*.whl
+          generate_release_notes: true
