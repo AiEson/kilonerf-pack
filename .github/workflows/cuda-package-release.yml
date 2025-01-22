@@ -50,13 +50,16 @@ jobs:
     # Install MAGMA
     - name: Install MAGMA
       run: |
-        wget http://icl.utk.edu/projectsfiles/magma/downloads/magma-2.8.0.tar.gz
-        tar -zxvf magma-2.8.0.tar.gz
-        cd magma-2.8.0
+        sudo apt-get install -y gfortran curl
+        # curl -L -o magma-2.8.0.tar.gz http://icl.utk.edu/projectsfiles/magma/downloads/magma-2.8.0.tar.gz
+        # tar -xvf magma-2.8.0.tar.gz
+        git clone https://github.com/icl-utk-edu/magma.git
+        cd magma
         cp make.inc-examples/make.inc.openblas make.inc
         export GPU_TARGET="Maxwell Pascal Volta Turing Ampere"
         export CUDADIR=/usr/local/cuda
         export OPENBLASDIR="/usr"
+        # export TORCH_CUDA_ARCH_LIST="6.0 7.0 7.5 8.0 8.6+PTX"
         make -j$(nproc)
         sudo -E make install prefix=/usr/local/magma
     
@@ -89,16 +92,11 @@ jobs:
       
     steps:
       - name: Download all artifacts
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           path: dist
-      
-      - name: Create Release
-        uses: softprops/action-gh-release@v0.1.15
+          pattern: kilonerf-cuda-wheel-*
+          merge-multiple: true
         with:
-          files: |
-            dist/**/*.whl
-            dist/*/*.whl
+          files: dist/**/*.whl
           generate_release_notes: true
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
