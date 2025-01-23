@@ -100,10 +100,12 @@ jobs:
       contents: write
       
     steps:
-      - name: Download all artifacts
+      - name: Download artifacts
         uses: actions/download-artifact@v3
         with:
+          pattern: kilonerf-cuda-wheel-*
           path: dist
+          merge-multiple: true
 
       - name: List downloaded files
         run: |
