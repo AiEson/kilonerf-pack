@@ -44,19 +44,6 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y freeglut3-dev libgl1-mesa-dev libglu1-mesa-dev wget curl cmake libopenblas-dev
 
-    # Cache MAGMA
-    - name: Create MAGMA directory
-      run: |
-        mkdir -p ${{ github.workspace }}/magma
-        sudo chown -R $USER:$USER ${{ github.workspace }}/magma
-
-    - name: Cache MAGMA
-      id: cache-magma
-      uses: actions/cache@v3
-      with:
-        path: ${{ github.workspace }}/magma
-        key: magma-${{ runner.os }}-${{ hashFiles('**/magma') }}
-
     # Install MAGMA
     - name: Install MAGMA
       if: steps.cache-magma.outputs.cache-hit != 'true'
@@ -69,13 +56,7 @@ jobs:
         export CUDADIR=/usr/local/cuda
         export OPENBLASDIR="/usr"
         make -j$(nproc)
-        sudo -E make install prefix=${{ github.workspace }}/magma
-
-    # Save MAGMA to cache
-    - name: Save MAGMA to cache
-      if: steps.cache-magma.outputs.cache-hit != 'true'
-      run: |
-        sudo chown -R $USER:$USER /usr/local/magma
+        sudo -E make install prefix=/usr/local/magma
 
     # Install Python dependencies
     - name: Install Python dependencies
