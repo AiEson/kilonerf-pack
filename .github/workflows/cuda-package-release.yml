@@ -28,54 +28,66 @@ jobs:
       with:
         version: 9
         platform: x64
-    
+        
     # Set up Python environment
     - name: Set up Python
       uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python-version }}
-    
+        
     # Install CUDA
     - name: Install CUDA
       uses: Jimver/cuda-toolkit@4bd727d5619dc6fa323b1e76c3aa5dca94f5ec6d # v0.2.19
       with:
         log-file-suffix: ${{ matrix.python-version }}.txt
-      
+        
     # Install system dependencies
     - name: Install system dependencies
       run: |
         sudo apt-get update
         sudo apt-get install -y freeglut3-dev libgl1-mesa-dev libglu1-mesa-dev wget curl cmake libopenblas-dev
-    
+
+    # Cache MAGMA
+    - name: Cache MAGMA
+      id: cache-magma
+      uses: actions/cache@v3
+      with:
+        path: /usr/local/magma
+        key: magma-${{ runner.os }}-${{ hashFiles('**/magma') }}
+
     # Install MAGMA
     - name: Install MAGMA
+      if: steps.cache-magma.outputs.cache-hit != 'true'
       run: |
         sudo apt-get install -y gfortran curl
-        # curl -L -o magma-2.8.0.tar.gz http://icl.utk.edu/projectsfiles/magma/downloads/magma-2.8.0.tar.gz
-        # tar -xvf magma-2.8.0.tar.gz
         git clone https://github.com/icl-utk-edu/magma.git
         cd magma
         cp make.inc-examples/make.inc.openblas make.inc
         export GPU_TARGET="Maxwell Pascal Volta Turing Ampere"
         export CUDADIR=/usr/local/cuda
         export OPENBLASDIR="/usr"
-        # export TORCH_CUDA_ARCH_LIST="6.0 7.0 7.5 8.0 8.6+PTX"
         make -j$(nproc)
         sudo -E make install prefix=/usr/local/magma
-    
+
+    # Save MAGMA to cache
+    - name: Save MAGMA to cache
+      if: steps.cache-magma.outputs.cache-hit != 'true'
+      run: |
+        sudo chown -R $USER:$USER /usr/local/magma
+
     # Install Python dependencies
     - name: Install Python dependencies
       run: |
         python -m pip install --upgrade pip
         pip install torch torchvision torchaudio
         pip install wheel setuptools build
-    
+
     # Build the CUDA package
     - name: Build CUDA package
       run: |
         cd cuda
         TORCH_CUDA_ARCH_LIST="6.0 7.0 7.5 8.0 8.6+PTX" python setup.py bdist_wheel
-    
+
     # Upload wheel as artifact
     - name: Upload wheel artifact
       uses: actions/upload-artifact@v4
@@ -95,11 +107,15 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           path: dist
-      
+
+      - name: List downloaded files
+        run: |
+          ls -R dist/
+
       - name: Create Release
         uses: softprops/action-gh-release@v0.1.15
         with:
-          files: dist/kilonerf-cuda-wheel-*/*.whl
+          files: dist/**/*.whl
           generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
