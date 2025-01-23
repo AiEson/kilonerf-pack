@@ -72,7 +72,7 @@ jobs:
         sudo -E make install prefix=${{ github.workspace }}/magma
 
     # Save MAGMA to cache
-    - name":
+    - name: Save MAGMA to cache
       if: steps.cache-magma.outputs.cache-hit != 'true'
       run: |
         sudo chown -R $USER:$USER /usr/local/magma
