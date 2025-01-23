@@ -44,14 +44,6 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y freeglut3-dev libgl1-mesa-dev libglu1-mesa-dev wget curl cmake libopenblas-dev
 
-    # Cache MAGMA
-    - name: Cache MAGMA
-      id: cache-magma
-      uses: actions/cache@v3
-      with:
-        path: /usr/local/magma
-        key: magma-${{ runner.os }}-${{ hashFiles('**/magma') }}
-
     # Install MAGMA
     - name: Install MAGMA
       if: steps.cache-magma.outputs.cache-hit != 'true'
@@ -65,12 +57,6 @@ jobs:
         export OPENBLASDIR="/usr"
         make -j$(nproc)
         sudo -E make install prefix=/usr/local/magma
-
-    # Save MAGMA to cache
-    - name: Save MAGMA to cache
-      if: steps.cache-magma.outputs.cache-hit != 'true'
-      run: |
-        sudo chown -R $USER:$USER /usr/local/magma
 
     # Install Python dependencies
     - name: Install Python dependencies
@@ -109,12 +95,12 @@ jobs:
 
       - name: List downloaded files
         run: |
-          ls -R dist/
+          ls dist/
 
       - name: Create Release
         uses: softprops/action-gh-release@v0.1.15
         with:
-          files: dist/**
+          files: ./**
           generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
